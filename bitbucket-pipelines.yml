@@ -1,0 +1,39 @@
+#  This template allows you to test and build your Java project with Maven.
+#  The workflow allows running tests, code checkstyle and security scans on the default branch.
+
+# Prerequisites: pom.xml and appropriate project structure should exist in the repository.
+
+image: python:3.9
+
+pipelines:
+  default:
+    - parallel:
+#      - step:
+#          name: Build and Test
+#          clone:
+#            depth: full    # SonarCloud scanner needs the full history to assign issues properly
+#          caches:
+#            - pip
+#          script:
+#            - pip install -r requirements.txt
+#            - pipe: sonarsource/sonarcloud-scan:1.2.1
+            #- pipe: sonarsource/sonarcloud-quality-gate:0.1.4
+#          services:
+#            - redis
+#            - docker
+#          after-script:
+              # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+#            - pipe: atlassian/checkstyle-report:0.2.0
+      - step:
+          name: Security Scan
+          script:
+            # Run a security scan for sensitive data.
+            # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
+            - pipe: atlassian/git-secrets-scan:0.4.3
+            - pipe: sonarsource/sonarcloud-scan:1.2.1
+definitions: 
+  services: 
+    redis: 
+      image: redis
+    docker:
+      memory: 2048
