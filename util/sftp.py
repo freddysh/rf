@@ -25,11 +25,10 @@ def connection_sftp(host, user, file):
         }
     except Exception as e:
         print(e)
-        raise e
         external_t.close()
         print('Finalizando conexión')
         return {"status": "error", "message": "error.sftp.connection", "messageDetail":"Error en conexión con el sftp"}
-        
+
 def file_list(sftp):
     date = get_date()
     #date = "20210705"

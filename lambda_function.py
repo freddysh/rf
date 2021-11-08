@@ -36,31 +36,28 @@ def lambda_handler(event, context):
         }
 
     # Get CLAI configuration
-    # hostClai, pathClai, userClai, bucketClai, regionClai, keyClai = clai_configuration(
-    #     connection, cursor)
-    # if hostClai is None or pathClai is None or userClai is None or bucketClai is None or regionClai is None or keyClai is None:
-    #     return {
-    #         "status": "error",
-    #         "message": "error.clai.configuration",
-    #         "messageDetail": "No se pudo obetener configuración CLAI"
-    #     }
+    hostClai, pathClai, userClai, bucketClai, regionClai, keyClai = clai_configuration(
+        connection, cursor)
+    if hostClai is None or pathClai is None or userClai is None or bucketClai is None or regionClai is None or keyClai is None:
+        return {
+            "status": "error",
+            "message": "error.clai.configuration",
+            "messageDetail": "No se pudo obetener configuración CLAI"
+        }
     
     # Connect S3 CLAI and download rsa key
-    # rsaClai = downloadIpmFileFromAwsS3(keyClai, bucketClai, regionClai)
-    # if rsaClai is None:
-    #     return {
-    #         "status": "error",
-    #         "message": "error.s3.connection",
-    #         "messageDetail": "Error en conexión con s3"
-    #     }
+    rsaClai = downloadIpmFileFromAwsS3(keyClai, bucketClai, regionClai)
+    if rsaClai is None:
+        return {
+            "status": "error",
+            "message": "error.s3.connection",
+            "messageDetail": "Error en conexión con s3"
+        }
 
     # Connect SFTP
-    # response_remote = connection_sftp(hostClai,
-    #                                   userClai, rsaClai)
+    response_remote = connection_sftp(hostClai,
+                                      userClai, rsaClai)
 
-    response_remote = connection_sftp("3.234.195.134",
-                                      "clai", "sftp.dev.clai-id_rsa")
-        
     json_response = {
         "status":False,
         "Archivos":[],
