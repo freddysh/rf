@@ -30,10 +30,11 @@ def connection_sftp(host, user, file):
         return {"status": "error", "message": "error.sftp.connection", "messageDetail":"Error en conexión con el sftp"}
 
 def file_list(sftp):
-    date = get_date()
-    #date = "20210705"
+    # date = get_date()
+    date = "20211025"
     file_name = "ALG_ListRchzo_CC.ADQMC_" +str(date)
 
+    print("formato file_name",str(file_name))
     print("Inicio de búsqueda de archivos para el día "+date)
     lista = sftp.listdir(folder_sftp)
     archivos_encontrados = []

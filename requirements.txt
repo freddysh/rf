@@ -1,3 +1,5 @@
 psycopg2-binary==2.8.6
 pytz==2020.1
 paramiko==2.7.2
+python-dotenv==0.19.1
+boto3==1.20.2

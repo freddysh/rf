@@ -45,19 +45,22 @@ def lambda_handler(event, context):
             "messageDetail": "No se pudo obetener configuración CLAI"
         }
     
+    print("""hostClai={0}, pathClai={1}, userClai={2}, bucketClai={3}, regionClai={4}, keyClai={5}""".format(hostClai, pathClai, userClai, bucketClai, regionClai, keyClai))
     # Connect S3 CLAI and download rsa key
-    rsaClai = downloadIpmFileFromAwsS3(keyClai, bucketClai, regionClai)
-    if rsaClai is None:
-        return {
-            "status": "error",
-            "message": "error.s3.connection",
-            "messageDetail": "Error en conexión con s3"
-        }
+    
+    # rsaClai = downloadIpmFileFromAwsS3(keyClai, bucketClai, regionClai)
+    # if rsaClai is None:
+    #     return {
+    #         "status": "error",
+    #         "message": "error.s3.connection",
+    #         "messageDetail": "Error en conexión con s3"
+    #     }
 
     # Connect SFTP
-    response_remote = connection_sftp(hostClai,
-                                      userClai, rsaClai)
-
+    # response_remote = connection_sftp(hostClai,
+    #                                   userClai, rsaClai)
+    response_remote = connection_sftp("3.234.195.134",
+                                      "clai", "sftp.dev.clai-id_rsa")
     json_response = {
         "status":False,
         "Archivos":[],
@@ -70,20 +73,22 @@ def lambda_handler(event, context):
         return response_remote
     
     sftp = get_response_item(response_remote,'sftp')
-    
+    # lista todod los archivos del dia
     daily_list = file_list(sftp)
     
     if len(daily_list) == 0:
-        return {"status": "error", "message": "error.file.connection", "messageDetail":"No se encontró archivos a procesar"}
+        return {"status": "error", "message": "error.lambda_handler.file_list", "messageDetail":"No se encontró archivos a procesar"}
 
     transaction_list = select_transactions(connection, cursor)
-    
+    # print("litado:",transaction_list)
+    # raise Exception("new breack")
     if len(transaction_list) == 0:
         print("No se encontro transacciones con estado REGISTRADO")
-        return {"status": "error", "message": "error.transaction.status", "messageDetail":"No se encontró transacciones con estado REGISTRADO en BD"}
+        return {"status": "error", "message": "error.transaction.status", "messageDetail":"No se encontró transacciones con estado liquidado en BD"}
     
     list_file = []
 
+    # raise Exception("new breack")
     # Filter files with 0 transaction 
     for file in daily_list:
 
@@ -98,22 +103,18 @@ def lambda_handler(event, context):
                 list_file.append(file)
 
     if(len(list_file) == 0) :
-
-        for  item in transaction_list :
-            insert_devolution(connection, cursor, item.ordernumber, item.idecommerce, item.date_trx, item.idpendingpayment)
-
-        return {"status": "success", "message": "Se procesaron " + str(len(transaction_list)) + "  transacciones", "messageDetail":""}
+        # for  item in transaction_list :
+        #     insert_devolution(connection, cursor, item.vc_numeropedido, item.vc_idcomercio, item.dt_fecha_trx, item.idspecial_purchasereturn)
+        return {"status": "error", "message": "error.file.connection", "messageDetail":"No se encontró registros dentro de los archivos(nro:"+str(len(list_file))+") a procesar"}
 
     count_devolution = 0
     count_rejected = 0
     count = 0
 
     for item_payment in transaction_list:
-
         readListFile = True
         IndexFile = 0
-        while readListFile :
-
+        while readListFile and IndexFile<len(list_file) :
             file = list_file[IndexFile]
             data_original = ""
             # Number row begins information 
@@ -134,25 +135,21 @@ def lambda_handler(event, context):
                     row_idecommerce = filas[22].replace("'","")
                     row_ordernumber = filas[28].replace("'","")
 
-                    if item_payment.ordernumber == row_ordernumber and str(item_payment.idecommerce) == row_idecommerce :                                    
-
-                        count = update_pendingpayment_error(connection, cursor,item_payment.idpendingpayment)
+                    if item_payment.vc_numeropedido == row_ordernumber and str(item_payment.vc_idcomercio) == row_idecommerce :                                    
+                        count = update_pendingpayment_error(connection, cursor,item_payment.idspecial_purchasereturn)
                         count_rejected += count
                         readFile = False
                         readListFile = False
-
                 else:
                     readFile = False 
-
 
                 NumberRow += 1
             
             IndexFile += 1
-
-            if ( readListFile and IndexFile == len(list_file) ):
-                count = insert_devolution(connection, cursor, item_payment.ordernumber, item_payment.idecommerce, item_payment.date_trx, item_payment.idpendingpayment)
-                count_devolution += count
-                readListFile = False
+            # if ( readListFile and IndexFile == len(list_file) ):
+            #     count = insert_devolution(connection, cursor, item_payment.ordernumber, item_payment.idecommerce, item_payment.date_trx, item_payment.idspecial_purchasereturn)
+            #     count_devolution += count
+            #     readListFile = False
 
             #json_response['Archivos'].append(json_file)
     
